@@ -11,17 +11,24 @@ Replace `vim.ui.select`, `vim.ui.input`, and `vim.notify` with floating windows.
 - Window size limited to number of hint chars. Navigate pages with `h`, `l`.
 - Automatic tabular formatting of items is optionally available.
 - Convenient pipeline functions `filter`, `sort`, `transform` can be defined.
+- Example of custom buffer picker:
+
+<img width="460" height="162" alt="2025-08-06_17-19-57" src="https://github.com/user-attachments/assets/529bccf1-c3d7-4ea7-80df-985fbc9562b3" />
 
 ### Input
 
 Single-line floating window for user input (`vim.ui.input`).
 - Normal buffer starting in insert mode. Normal/Visual modes still accessible.
-- Used with operations such as LSP renaming.
+- Used with operations such as LSP renaming:
+
+<img width="460" height="162" alt="2025-08-06_17-20-22" src="https://github.com/user-attachments/assets/8c04caa9-063c-4cc4-9892-f24d85ad0ac8" />
 
 ### Notify
 
 Show `vim.notify` messages briefly in a top-right window.
 - Customize duration and highlight per message level.
+
+<img width="452" height="162" alt="2025-08-06_17-21-04" src="https://github.com/user-attachments/assets/4a8c5780-3648-438a-8b82-a34926180c1d" />
 
 ## Installation
 
