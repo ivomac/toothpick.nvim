@@ -169,6 +169,106 @@ The `opts` given to `require("toothpick").setup(opts)` will set the default opti
 
 ## Usage Examples
 
+### Last Used Buffer Select
+
+```lua
+-- format time in "3h42m10s" format
+local function format_time(time)
+  local seconds = time % 60
+  local minutes = math.floor((time % 3600) / 60)
+  local hours = math.floor(time / 3600)
+  if hours == 0 and minutes == 0 then
+    return string.format("%ds", seconds)
+  elseif hours == 0 then
+    return string.format("%dm", minutes)
+  else
+    return string.format("%dh%02d", hours, minutes)
+  end
+end
+
+local opts = {
+  prompt = " LUB ",
+  format_item = {
+    separator = " ",
+    -- columns are keys of items or of transform() output, if transform not nil (this case)
+    columns = { "filename", "shortpath", "lastused" },
+    justify = { "r", "l", "r" },
+    hl = { "Normal", "Comment", "Character" },
+  },
+  pipe = {
+    filter = function(buf)
+      -- exclude visible buffers
+      return buf.hidden == 1
+    end,
+    sort = function(buf1, buf2)
+      -- sort by lastused timestamp
+      return (buf1.lastused or 0) > (buf2.lastused or 0)
+    end,
+    transform = function(buf)
+      local relpath = vim.fn.fnamemodify(buf.name, ":p:~:.")
+
+      return {
+        bufnr = buf.bufnr,
+        -- get filename as "parent/name"
+        filename = string.format(
+          "%s/%s",
+          vim.fn.fnamemodify(relpath, ":h:t"),
+          vim.fn.fnamemodify(relpath, ":t")
+        ),
+        -- get remainder of path in short form
+        shortpath = vim.fn.pathshorten(vim.fn.fnamemodify(relpath, ":h:h"), 3),
+        -- get human-readable time since lastused
+        lastused = format_time(math.floor(os.time() - buf.lastused))
+      }
+    end,
+  },
+  keys = {
+    -- we can add extra keys for custom actions
+    accept = { "<CR>", "r" },
+  }
+}
+
+local function on_choice(buf, _, key)
+  if not buf then return end
+
+  if key == "r" then
+    -- delete buffer
+    vim.api.nvim_buf_delete(buf.bufnr, {})
+
+    -- reopen menu
+    vim.ui.select(vim.fn.getbufinfo({ buflisted = 1 }), opts, on_choice)
+  else
+    -- open buffer
+    vim.api.nvim_set_current_buf(buf.bufnr)
+  end
+end
+
+local function last_used_buffer_select()
+  vim.ui.select(vim.fn.getbufinfo({ buflisted = 1 }), opts, on_choice)
+end
+
+
+return {
+  "ivomac/toothpick.nvim",
+  opts = {
+    select = {},
+    input = {},
+    notify = {}
+  },
+  cmd = { "Notifications" },
+  keys = {
+    {
+      mode = { "n" },
+      "<leader>l",
+      last_used_buffer_select,
+      silent = true,
+      noremap = true,
+      desc = "List buffers by order of access",
+    },
+  },
+}
+```
+
 ## Similar plugins
 
 ### Select
