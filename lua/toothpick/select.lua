@@ -79,7 +79,7 @@ function M.select(items, config, on_choice)
     start_col = 1 + #config.hints.separator
   end
 
-  local format
+  local format = config.format_item
   if type(config.format_item) == "table" then
     -- calculate column sizes
     local colsizes = {}
@@ -106,8 +106,10 @@ function M.select(items, config, on_choice)
       local cols = table.concat(justified_lines, config.format_item.separator)
       return cols
     end
-  else
-    format = config.format_item
+  end
+
+  if not format then
+    error("config.format_item needs to be a function or a table")
   end
 
   -- Lists of items
@@ -160,16 +162,19 @@ function M.select(items, config, on_choice)
   end
 
   -- Create float window
-  local wconfig = config.win_config
-  wconfig.title = wconfig.title or config.prompt or ""
-  wconfig.height = math.min(#items, #config.hints.chars)
-  wconfig.width = math.max(max_linewidth, #wconfig.title)
+  local win_config = config.win_config
+  if not win_config then
+    error("Missing win_config")
+  end
+  win_config.title = win_config.title or config.prompt or ""
+  win_config.height = math.min(#items, #config.hints.chars)
+  win_config.width = math.max(max_linewidth, #win_config.title)
 
   if #lists > 1 then
-    wconfig.footer = "1/" .. #lists
+    win_config.footer = "1/" .. #lists
   end
 
-  local win = vim.api.nvim_open_win(bufs[1], true, wconfig)
+  local win = vim.api.nvim_open_win(bufs[1], true, win_config)
 
   -- Load user highlight namespace
   vim.api.nvim_win_set_hl_ns(win, hl_ns)
@@ -217,7 +222,7 @@ function M.select(items, config, on_choice)
     for _, key in ipairs(config.keys.accept) do
       vim.keymap.set("n", key,
         function()
-          select(vim.api.nvim_win_get_cursor(win)[1] + (nbuf - 1) * wconfig.height, key)
+          select(vim.api.nvim_win_get_cursor(win)[1] + (nbuf - 1) * win_config.height, key)
         end,
         map_opts
       )
@@ -226,7 +231,7 @@ function M.select(items, config, on_choice)
     -- Line hint keymaps
     for nline = 1, #lists[nbuf] do
       local key = get_item_hint(nline)
-      local nitem = nline + (nbuf - 1) * wconfig.height
+      local nitem = nline + (nbuf - 1) * win_config.height
       vim.keymap.set("n", key, function() select(nitem, key) end, map_opts)
     end
 
